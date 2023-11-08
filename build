@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+docker build \
+  -t saladtechnologies/willow-inference-server:latest \
+  --platform linux/amd64 \
+  --output type=docker \
+  --provenance false \
+  .

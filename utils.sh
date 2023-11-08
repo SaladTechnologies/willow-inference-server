@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-WIS_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+WIS_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 cd "$WIS_DIR"
 
 # Test for local environment file and use any overrides
@@ -40,7 +40,7 @@ LISTEN_IP=${LISTEN_IP:-0.0.0.0}
 GPUS=${GPUS:-"all"}
 
 # Detect GPU support
-if command -v nvidia-smi &> /dev/null; then
+if command -v nvidia-smi &>/dev/null; then
     DOCKER_GPUS="--gpus $GPUS"
     DOCKER_COMPOSE_FILE="docker-compose.yml"
 else
@@ -77,7 +77,7 @@ if [ -f /.dockerenv ]; then
     export container="docker"
 fi
 
-check_container(){
+check_container() {
     if [ "$container" ]; then
         return
     fi
@@ -86,7 +86,7 @@ check_container(){
     exit 1
 }
 
-check_host(){
+check_host() {
     if [ ! "$container" ]; then
         return
     fi
@@ -98,7 +98,7 @@ check_host(){
 whisper_model() {
     echo "Setting up WIS model $1..."
     MODEL="$1"
-    MODEL_OUT=`echo $MODEL | sed -e 's,/,-,g'`
+    MODEL_OUT=$(echo $MODEL | sed -e 's,/,-,g')
 
     #ct2-transformers-converter --force --model "$MODEL" --quantization "$QUANT" --output_dir models/"$MODEL_OUT"
     #python -c 'import transformers; processor=transformers.WhisperProcessor.from_pretrained("'$MODEL'"); processor.save_pretrained("./models/'$MODEL_OUT'")'
@@ -119,25 +119,25 @@ sv_model() {
     python -c 'import transformers; model=transformers.AutoModelForAudioXVector.from_pretrained("microsoft/wavlm-base-plus-sv"); model.save_pretrained("./models/microsoft-wavlm-base-plus-sv")'
 }
 
-build_one_whisper () {
+build_one_whisper() {
     docker run --rm $DOCKER_GPUS --shm-size="$SHM_SIZE" --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
         -v $WIS_DIR:/app -v $WIS_DIR/cache:/root/.cache "$IMAGE":"$TAG" \
         /app/utils.sh whisper-model $1
 }
 
-build_t5 () {
+build_t5() {
     docker run --rm $DOCKER_GPUS --shm-size="$SHM_SIZE" --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
         -v $WIS_DIR:/app -v $WIS_DIR/cache:/root/.cache "$IMAGE":"$TAG" \
         /app/utils.sh t5-model
 }
 
-build_sv () {
+build_sv() {
     docker run --rm $DOCKER_GPUS --shm-size="$SHM_SIZE" --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
         -v $WIS_DIR:/app -v $WIS_DIR/cache:/root/.cache "$IMAGE":"$TAG" \
         /app/utils.sh sv-model
 }
 
-build_chatbot () {
+build_chatbot() {
     docker run --rm $DOCKER_GPUS --shm-size="$SHM_SIZE" --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
         -v $WIS_DIR:/app -v $WIS_DIR/cache:/root/.cache "$IMAGE":"$TAG" \
         /app/chatbot/utils.sh install $CHATBOT_PARAMS
@@ -167,14 +167,14 @@ dep_check() {
 
 gunicorn_direct() {
     docker run --rm -it $DOCKER_GPUS --shm-size="$SHM_SIZE" --ipc=host \
-    --ulimit memlock=-1 --ulimit stack=67108864 \
-    -v $WIS_DIR:/app -v $WIS_DIR/cache:/root/.cache  --env-file .env \
-    --name "$NAME" \
-    -p "$LISTEN_IP":"$LISTEN_PORT":"$LISTEN_PORT" -p "$MEDIA_PORT_RANGE":"$MEDIA_PORT_RANGE"/udp \
-    "$IMAGE":"$TAG" \
-    gunicorn main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:"$LISTEN_PORT" \
-    --graceful-timeout 10 --forwarded-allow-ips "$FORWARDED_ALLOW_IPS" --log-level "$LOG_LEVEL" -t 0 \
-    --keyfile nginx/key.pem --certfile nginx/cert.pem --ssl-version TLSv1_2
+        --ulimit memlock=-1 --ulimit stack=67108864 \
+        -v $WIS_DIR:/app -v $WIS_DIR/cache:/root/.cache --env-file .env \
+        --name "$NAME" \
+        -p "$LISTEN_IP":"$LISTEN_PORT":"$LISTEN_PORT" -p "$MEDIA_PORT_RANGE":"$MEDIA_PORT_RANGE"/udp \
+        "$IMAGE":"$TAG" \
+        gunicorn main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:"$LISTEN_PORT" \
+        --graceful-timeout 10 --forwarded-allow-ips "$FORWARDED_ALLOW_IPS" --log-level "$LOG_LEVEL" -t 0 \
+        --keyfile nginx/key.pem --certfile nginx/cert.pem --ssl-version TLSv1_2
 }
 
 gen_cert() {
@@ -202,7 +202,7 @@ freeze_requirements() {
     fi
 
     # Freeze
-    pip freeze > requirements.txt
+    pip freeze >requirements.txt
 
     # When using Nvidia docker images they include a bunch of invalid local refs - remove them
     sed -i '/file:/d' requirements.txt
@@ -228,13 +228,13 @@ shell() {
 }
 
 download_models() {
-        CHATBOT_PARAMS=${CHATBOT_PARAMS:-13B}
+    CHATBOT_PARAMS=${CHATBOT_PARAMS:-13B}
 
     build_one_whisper tovera/wis-whisper-tiny
     build_one_whisper tovera/wis-whisper-base
     build_one_whisper tovera/wis-whisper-small
     build_one_whisper tovera/wis-whisper-medium
-    build_one_whisper tovera/wis-whisper-large-v2
+    build_one_whisper tovera/wis-whisper-large-v3
     build_t5
     build_sv
 
@@ -256,44 +256,44 @@ case $1 in
 download-models)
     sudo rm -rf models
     download_models
-;;
+    ;;
 
-build-docker|build)
+build-docker | build)
     check_host
     build_docker
-;;
+    ;;
 
 clean-cache)
     clean_cache
-;;
+    ;;
 
 gen-cert)
     check_host
     gen_cert $2
-;;
+    ;;
 
 freeze-requirements)
     check_container
     freeze_requirements
-;;
+    ;;
 
 whisper-model)
     whisper_model $2
-;;
+    ;;
 
 t5-model)
     t5_model
-;;
+    ;;
 
 sv-model)
     sv_model
-;;
+    ;;
 
 gunicorn)
     dep_check
     check_host
     gunicorn_direct
-;;
+    ;;
 
 install)
     check_host
@@ -302,32 +302,32 @@ install)
     download_models
     clean_cache
     echo "Install complete - you can now start with ./utils.sh run"
-;;
+    ;;
 
-start|run|up)
+start | run | up)
     dep_check
     check_host
     shift
     docker compose -f "$DOCKER_COMPOSE_FILE" up --remove-orphans "$@"
-;;
+    ;;
 
-stop|down)
+stop | down)
     dep_check
     check_host
     shift
     docker compose -f "$DOCKER_COMPOSE_FILE" down "$@"
-;;
+    ;;
 
-shell|docker)
+shell | docker)
     check_host
     shell
-;;
+    ;;
 
 *)
     dep_check
     check_host
     echo "Passing unknown argument directly to docker compose"
     docker compose -f "$DOCKER_COMPOSE_FILE" "$@"
-;;
+    ;;
 
 esac
