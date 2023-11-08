@@ -1,0 +1,6 @@
+#! /usr/bin/env bash
+
+docker run \
+  --gpus all \
+  -p 19000:19000 \
+  saladtechnologies/willow-inference-server:latest

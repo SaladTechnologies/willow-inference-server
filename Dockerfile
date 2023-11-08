@@ -6,10 +6,10 @@ ENV TORCH_CUDA_ARCH_LIST="6.0;6.1;7.0;7.5;8.0;8.6;8.9;9.0+PTX"
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        python3-dev \
-        python3-pip \
-        wget \
-        && \
+    python3-dev \
+    python3-pip \
+    wget \
+    && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -22,8 +22,8 @@ RUN wget -q https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PROD
     echo "deb https://apt.repos.intel.com/oneapi all main" > /etc/apt/sources.list.d/oneAPI.list && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-        intel-oneapi-mkl-devel-$ONEAPI_VERSION \
-        && \
+    intel-oneapi-mkl-devel-$ONEAPI_VERSION \
+    && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -56,9 +56,9 @@ ENV CTRANSLATE2_ROOT=/opt/ctranslate2
 RUN mkdir build && \
     cd build && \
     cmake -DCMAKE_INSTALL_PREFIX=${CTRANSLATE2_ROOT} \
-          -DWITH_CUDA=ON -DWITH_CUDNN=ON -DWITH_MKL=ON -DWITH_DNNL=ON -DOPENMP_RUNTIME=COMP \
-          -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="${CXX_FLAGS}" \
-          -DCUDA_NVCC_FLAGS="${CUDA_NVCC_FLAGS}" -DCUDA_ARCH_LIST="${CUDA_ARCH_LIST}" .. && \
+    -DWITH_CUDA=ON -DWITH_CUDNN=ON -DWITH_MKL=ON -DWITH_DNNL=ON -DOPENMP_RUNTIME=COMP \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="${CXX_FLAGS}" \
+    -DCUDA_NVCC_FLAGS="${CUDA_NVCC_FLAGS}" -DCUDA_ARCH_LIST="${CUDA_ARCH_LIST}" .. && \
     VERBOSE=1 make -j$(nproc) install
 
 ENV LANG=en_US.UTF-8
@@ -79,6 +79,7 @@ RUN apt-get update && apt-get install -y zstd git-lfs && rm -rf /var/lib/apt/lis
 
 COPY requirements.txt .
 # Run pip install with cache so we speedup subsequent rebuilds
+RUN pip install -U pip
 RUN --mount=type=cache,target=/root/.cache pip install -r requirements.txt
 
 # Install our torch ver matching cuda
@@ -96,6 +97,12 @@ RUN python3 -m pip --no-cache-dir install $CTRANSLATE2_ROOT/*.whl && \
 RUN --mount=type=cache,target=/root/.cache pip install auto-gptq --extra-index-url https://huggingface.github.io/autogptq-index/whl/cu118/
 
 COPY . .
+
+RUN ./utils.sh whisper-model tovera/wis-whisper-tiny
+RUN ./utils.sh whisper-model tovera/wis-whisper-base
+RUN ./utils.sh whisper-model tovera/wis-whisper-small
+RUN ./utils.sh whisper-model tovera/wis-whisper-medium
+RUN ./utils.sh whisper-model tovera/wis-whisper-large-v3
 
 CMD ./entrypoint.sh
 EXPOSE 19000

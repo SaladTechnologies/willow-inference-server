@@ -101,9 +101,10 @@ whisper_model() {
     MODEL_OUT=$(echo $MODEL | sed -e 's,/,-,g')
 
     #ct2-transformers-converter --force --model "$MODEL" --quantization "$QUANT" --output_dir models/"$MODEL_OUT"
-    #python -c 'import transformers; processor=transformers.WhisperProcessor.from_pretrained("'$MODEL'"); processor.save_pretrained("./models/'$MODEL_OUT'")'
+    # python -c 'import transformers; processor=transformers.WhisperProcessor.from_pretrained("'$MODEL'"); processor.save_pretrained("./models/'$MODEL_OUT'")'
+    # python -c 'import transformers; model=transformers.WhisperModel.from_pretrained("'$MODEL'"); model.save_pretrained("./models/'$MODEL_OUT'")'
     git clone https://huggingface.co/"$MODEL" models/"$MODEL_OUT"
-    rm -rf "$MODEL_OUT"/.git
+    # rm -rf "$MODEL_OUT"/.git
 }
 
 t5_model() {
@@ -120,9 +121,7 @@ sv_model() {
 }
 
 build_one_whisper() {
-    docker run --rm $DOCKER_GPUS --shm-size="$SHM_SIZE" --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
-        -v $WIS_DIR:/app -v $WIS_DIR/cache:/root/.cache "$IMAGE":"$TAG" \
-        /app/utils.sh whisper-model $1
+    whisper-model $1
 }
 
 build_t5() {
@@ -186,7 +185,7 @@ gen_cert() {
     # Remove old wis certs if present
     if [ -r cert.pem ] || [ -r key.pem ]; then
         echo "Removing old WIS certificate - enter password when prompted"
-        sudo rm -f key.pem cert.pem
+        rm -f key.pem cert.pem
     fi
 
     openssl req -x509 -newkey rsa:2048 -keyout nginx/key.pem -out nginx/cert.pem -sha256 -days 3650 \
@@ -244,17 +243,17 @@ download_models() {
 }
 
 clean_cache() {
-    sudo rm -rf nginx/cache cache/huggingface
+    rm -rf nginx/cache cache/huggingface
 }
 
 clean_models() {
-    sudo rm -rf models/*
+    rm -rf models/*
 }
 
 case $1 in
 
 download-models)
-    sudo rm -rf models
+    rm -rf models
     download_models
     ;;
 

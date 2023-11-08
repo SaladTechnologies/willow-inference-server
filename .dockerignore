@@ -9,5 +9,5 @@ audio
 *.pem
 chatbot
 *.zstd
-nginx
+# nginx
 work

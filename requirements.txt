@@ -1,4 +1,4 @@
-accelerate==0.22.0
+accelerate==0.24.1
 aiofiles==23.2.1
 aiohttp==3.8.5
 aioice==0.9.0
@@ -90,7 +90,7 @@ nvidia-cusparse-cu12==12.1.0.106
 nvidia-nccl-cu12==2.18.1
 nvidia-nvjitlink-cu12==12.3.52
 nvidia-nvtx-cu12==12.1.105
-optimum==1.13.1
+optimum==1.14.0
 orjson==3.9.7
 packaging==23.1
 pandas==2.1.0
@@ -151,10 +151,10 @@ svgwrite==1.4.3
 sympy==1.11.1
 threadpoolctl==3.2.0
 tiktoken==0.4.0
-tokenizers==0.13.3
+tokenizers==0.14.1
 toolz==0.12.0
 tqdm==4.66.1
-transformers==4.33.1
+transformers==4.35.0
 triton==2.1.0
 types-PyYAML==6.0.12.11
 typing_extensions==4.7.1
